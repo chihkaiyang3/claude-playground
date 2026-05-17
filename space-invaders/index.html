@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Space Invaders</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: #000;
+            font-family: Arial, sans-serif;
+            color: #0f0;
+        }
+
+        .container {
+            text-align: center;
+        }
+
+        h1 {
+            margin-bottom: 20px;
+            color: #0f0;
+            text-shadow: 0 0 10px #0f0;
+        }
+
+        canvas {
+            border: 2px solid #0f0;
+            background: #000;
+            display: block;
+            margin: 0 auto 20px;
+            box-shadow: 0 0 20px rgba(0, 255, 0, 0.5);
+        }
+
+        .info {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 20px;
+            font-size: 18px;
+            color: #0f0;
+        }
+
+        .controls {
+            margin: 20px 0;
+            font-size: 14px;
+            color: #0f0;
+        }
+
+        .controls p {
+            margin: 5px 0;
+        }
+
+        .game-over {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.9);
+            padding: 40px;
+            border: 2px solid #0f0;
+            text-align: center;
+            display: none;
+            z-index: 100;
+            color: #0f0;
+            box-shadow: 0 0 20px rgba(0, 255, 0, 0.5);
+        }
+
+        .game-over h2 {
+            font-size: 48px;
+            margin-bottom: 20px;
+            text-shadow: 0 0 10px #0f0;
+        }
+
+        .game-over p {
+            font-size: 24px;
+            margin: 10px 0;
+        }
+
+        .game-over button {
+            margin-top: 20px;
+            padding: 10px 30px;
+            font-size: 18px;
+            background: #0f0;
+            color: #000;
+            border: none;
+            cursor: pointer;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+
+        .game-over button:hover {
+            background: #0a0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>SPACE INVADERS</h1>
+        <div class="info">
+            <div>Score: <span id="score">0</span></div>
+            <div>Wave: <span id="wave">0</span></div>
+            <div>Lives: <span id="lives">3</span></div>
+        </div>
+        <div style="color: #0f0; font-size: 14px; margin-bottom: 10px;">Pattern: <span id="pattern">LINEAR</span></div>
+        <canvas id="gameCanvas" width="800" height="600"></canvas>
+        <div class="controls">
+            <p>← → Arrow Keys or A/D to Move</p>
+            <p>SPACE to Shoot</p>
+            <p>Press SPACE to Start</p>
+        </div>
+    </div>
+
+    <div class="game-over" id="gameOverScreen">
+        <h2 id="gameOverTitle">GAME OVER</h2>
+        <p>Final Score: <span id="finalScore">0</span></p>
+        <button onclick="location.reload()">Play Again</button>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+
+        const gameOverScreen = document.getElementById('gameOverScreen');
+        const scoreDisplay = document.getElementById('score');
+        const livesDisplay = document.getElementById('lives');
+        const waveDisplay = document.getElementById('wave');
+        const patternDisplay = document.getElementById('pattern');
+        const finalScoreDisplay = document.getElementById('finalScore');
+        const gameOverTitle = document.getElementById('gameOverTitle');
+
+        // Game states
+        const GAME_STATE = {
+            IDLE: 0,
+            PLAYING: 1,
+            GAME_OVER: 2,
+            WON: 3
+        };
+
+        let gameState = GAME_STATE.IDLE;
+
+        // Player
+        const player = {
+            x: canvas.width / 2 - 20,
+            y: canvas.height - 50,
+            width: 40,
+            height: 40,
+            speed: 5,
+            dx: 0,
+            bullets: []
+        };
+
+        // Enemies
+        let enemies = [];
+        let enemyBullets = [];
+        let score = 0;
+        let lives = 3;
+        let enemySpeed = 1;
+        let spawnRate = 0;
+        let wave = 0;
+        let currentPatternName = 'LINEAR';
+
+        // Pattern Registry
+        const patterns = [
+            {
+                name: 'LINEAR',
+                update: (enemy, frameCount, enemies, canvasWidth) => {
+                    enemy.x += enemy.speed * enemy.direction;
+                    let changeDir = false;
+                    if (enemy.x <= 0 || enemy.x + enemy.width >= canvasWidth) {
+                        changeDir = true;
+                    }
+                    return changeDir;
+                }
+            },
+            {
+                name: 'SINE_WAVE',
+                update: (enemy, frameCount, enemies, canvasWidth) => {
+                    enemy.x += enemy.speed * 0.6 * enemy.direction;
+                    const amplitude = 25;
+                    const frequency = 0.08;
+                    enemy.y = enemy.baseY + Math.sin(frameCount * frequency) * amplitude;
+
+                    let changeDir = false;
+                    if (enemy.x <= 0 || enemy.x + enemy.width >= canvasWidth) {
+                        changeDir = true;
+                    }
+                    return changeDir;
+                }
+            },
+            {
+                name: 'DIAGONAL',
+                update: (enemy, frameCount, enemies, canvasWidth) => {
+                    enemy.x += enemy.speed * 0.8 * enemy.direction;
+                    enemy.y += enemy.speed * 0.5;
+
+                    let changeDir = false;
+                    if (enemy.x <= 0 || enemy.x + enemy.width >= canvasWidth) {
+                        changeDir = true;
+                    }
+                    return changeDir;
+                }
+            },
+            {
+                name: 'BOUNCING',
+                update: (enemy, frameCount, enemies, canvasWidth) => {
+                    enemy.x += enemy.speed * 0.7 * enemy.direction;
+                    enemy.speedY = enemy.speedY || 2;
+                    enemy.y += enemy.speedY;
+
+                    if (enemy.y <= 50 || enemy.y + enemy.height >= 550) {
+                        enemy.speedY *= -1;
+                    }
+
+                    let changeDir = false;
+                    if (enemy.x <= 0 || enemy.x + enemy.width >= canvasWidth) {
+                        changeDir = true;
+                    }
+                    return changeDir;
+                }
+            },
+            {
+                name: 'SPIRAL',
+                update: (enemy, frameCount, enemies, canvasWidth) => {
+                    const centerX = canvasWidth / 2;
+                    const centerY = 150;
+                    const radius = 80 + Math.sin(frameCount * 0.03) * 30;
+                    const angle = (frameCount * 0.03 + enemy.spiralOffset) * Math.PI / 180;
+
+                    enemy.x = centerX + Math.cos(angle) * radius - enemy.width / 2;
+                    enemy.y = centerY + Math.sin(angle) * radius * 0.6;
+
+                    return false;
+                }
+            },
+            {
+                name: 'ZIGZAG',
+                update: (enemy, frameCount, enemies, canvasWidth) => {
+                    const zigzagPeriod = 40;
+                    const phase = Math.floor(frameCount / zigzagPeriod) % 2;
+
+                    enemy.x += enemy.speed * enemy.direction;
+                    if (phase === 0) {
+                        enemy.y += 1.5;
+                    } else {
+                        enemy.y -= 1.5;
+                    }
+
+                    let changeDir = false;
+                    if (enemy.x <= 0 || enemy.x + enemy.width >= canvasWidth) {
+                        changeDir = true;
+                    }
+                    return changeDir;
+                }
+            },
+            {
+                name: 'TREMOR',
+                update: (enemy, frameCount, enemies, canvasWidth) => {
+                    const tremor = Math.sin(frameCount * 0.3) * 4;
+                    enemy.x += (enemy.speed * 0.5 * enemy.direction) + tremor;
+                    enemy.y += 0.3;
+
+                    let changeDir = false;
+                    if (enemy.x <= 0 || enemy.x + enemy.width >= canvasWidth) {
+                        changeDir = true;
+                    }
+                    return changeDir;
+                }
+            }
+        ];
+
+        function selectRandomPattern() {
+            return patterns[Math.floor(Math.random() * patterns.length)];
+        }
+
+        // Input handling
+        const keys = {};
+
+        window.addEventListener('keydown', (e) => {
+            keys[e.key] = true;
+
+            if (e.key === ' ') {
+                e.preventDefault();
+                if (gameState === GAME_STATE.IDLE) {
+                    startGame();
+                } else if (gameState === GAME_STATE.PLAYING) {
+                    shootBullet();
+                }
+            }
+        });
+
+        window.addEventListener('keyup', (e) => {
+            keys[e.key] = false;
+        });
+
+        function startGame() {
+            gameState = GAME_STATE.PLAYING;
+            score = 0;
+            lives = 3;
+            enemySpeed = 1;
+            player.bullets = [];
+            enemies = [];
+            enemyBullets = [];
+            spawnRate = 0;
+            updateHUD();
+            spawnInitialEnemies();
+        }
+
+        function spawnInitialEnemies() {
+            wave++;
+            const pattern = selectRandomPattern();
+            currentPatternName = pattern.name;
+
+            for (let row = 0; row < 3; row++) {
+                for (let col = 0; col < 5; col++) {
+                    const x = col * 120 + 60;
+                    const y = row * 80 + 30;
+                    enemies.push({
+                        x: x,
+                        y: y,
+                        baseY: y,
+                        width: 30,
+                        height: 30,
+                        speed: enemySpeed,
+                        direction: 1,
+                        pattern: pattern,
+                        spiralOffset: col * 20
+                    });
+                }
+            }
+        }
+
+        function shootBullet() {
+            player.bullets.push({
+                x: player.x + player.width / 2 - 2,
+                y: player.y,
+                width: 4,
+                height: 10,
+                speed: 7
+            });
+        }
+
+        function drawPlayer() {
+            // Ship body
+            ctx.fillStyle = '#0f0';
+            ctx.beginPath();
+            ctx.moveTo(player.x + player.width / 2, player.y);
+            ctx.lineTo(player.x + player.width, player.y + player.height);
+            ctx.lineTo(player.x, player.y + player.height);
+            ctx.closePath();
+            ctx.fill();
+
+            // Window
+            ctx.fillStyle = '#000';
+            ctx.fillRect(player.x + 12, player.y + 10, 16, 10);
+        }
+
+        function drawEnemy(enemy) {
+            ctx.fillStyle = '#f0f';
+            ctx.fillRect(enemy.x, enemy.y, enemy.width, enemy.height);
+
+            // Enemy eyes
+            ctx.fillStyle = '#fff';
+            ctx.fillRect(enemy.x + 5, enemy.y + 8, 5, 5);
+            ctx.fillRect(enemy.x + 20, enemy.y + 8, 5, 5);
+        }
+
+        function drawBullets() {
+            ctx.fillStyle = '#0f0';
+            player.bullets.forEach(bullet => {
+                ctx.fillRect(bullet.x, bullet.y, bullet.width, bullet.height);
+            });
+
+            ctx.fillStyle = '#ff0';
+            enemyBullets.forEach(bullet => {
+                ctx.fillRect(bullet.x, bullet.y, bullet.width, bullet.height);
+            });
+        }
+
+        function updatePlayer() {
+            if (keys['ArrowLeft'] || keys['a'] || keys['A']) {
+                player.x = Math.max(0, player.x - player.speed);
+            }
+            if (keys['ArrowRight'] || keys['d'] || keys['D']) {
+                player.x = Math.min(canvas.width - player.width, player.x + player.speed);
+            }
+
+            // Update bullets
+            player.bullets = player.bullets.filter(bullet => {
+                bullet.y -= bullet.speed;
+                return bullet.y > 0;
+            });
+        }
+
+        let frameCount = 0;
+
+        function updateEnemies() {
+            frameCount++;
+            let changeDirection = false;
+
+            // Move enemies using their assigned pattern
+            enemies.forEach(enemy => {
+                const changeDir = enemy.pattern.update(enemy, frameCount, enemies, canvas.width);
+                if (changeDir) {
+                    changeDirection = true;
+                }
+            });
+
+            // Change direction if needed (for LINEAR-like patterns)
+            if (changeDirection && currentPatternName !== 'SPIRAL') {
+                enemies.forEach(enemy => {
+                    enemy.direction *= -1;
+                    enemy.y += 40;
+                    enemy.baseY = enemy.y;
+                });
+                enemySpeed += 0.5;
+            }
+
+            // Enemy shooting
+            spawnRate++;
+            if (spawnRate > 30 && enemies.length > 0) {
+                const randomEnemy = enemies[Math.floor(Math.random() * enemies.length)];
+                enemyBullets.push({
+                    x: randomEnemy.x + randomEnemy.width / 2 - 2,
+                    y: randomEnemy.y + randomEnemy.height,
+                    width: 4,
+                    height: 10,
+                    speed: 4
+                });
+                spawnRate = 0;
+            }
+
+            // Update enemy bullets
+            enemyBullets = enemyBullets.filter(bullet => {
+                bullet.y += bullet.speed;
+                return bullet.y < canvas.height;
+            });
+
+            // Spawn new enemies if all destroyed
+            if (enemies.length === 0) {
+                score += 100;
+                enemySpeed += 1;
+                spawnInitialEnemies();
+            }
+        }
+
+        function checkCollisions() {
+            // Player bullets hitting enemies
+            for (let i = player.bullets.length - 1; i >= 0; i--) {
+                for (let j = enemies.length - 1; j >= 0; j--) {
+                    const bullet = player.bullets[i];
+                    const enemy = enemies[j];
+
+                    if (bullet.x < enemy.x + enemy.width &&
+                        bullet.x + bullet.width > enemy.x &&
+                        bullet.y < enemy.y + enemy.height &&
+                        bullet.y + bullet.height > enemy.y) {
+
+                        player.bullets.splice(i, 1);
+                        enemies.splice(j, 1);
+                        score += 10;
+                        break;
+                    }
+                }
+            }
+
+            // Enemy bullets hitting player
+            for (let i = enemyBullets.length - 1; i >= 0; i--) {
+                const bullet = enemyBullets[i];
+
+                if (bullet.x < player.x + player.width &&
+                    bullet.x + bullet.width > player.x &&
+                    bullet.y < player.y + player.height &&
+                    bullet.y + bullet.height > player.y) {
+
+                    enemyBullets.splice(i, 1);
+                    lives--;
+                    updateHUD();
+
+                    if (lives <= 0) {
+                        endGame(false);
+                    }
+                }
+            }
+
+            // Enemies reaching bottom
+            enemies.forEach(enemy => {
+                if (enemy.y + enemy.height >= canvas.height) {
+                    lives = 0;
+                    updateHUD();
+                    endGame(false);
+                }
+            });
+        }
+
+        function updateHUD() {
+            scoreDisplay.textContent = score;
+            livesDisplay.textContent = lives;
+            waveDisplay.textContent = wave;
+            patternDisplay.textContent = currentPatternName;
+        }
+
+        function endGame(won) {
+            gameState = won ? GAME_STATE.WON : GAME_STATE.GAME_OVER;
+            gameOverTitle.textContent = won ? 'YOU WIN!' : 'GAME OVER';
+            finalScoreDisplay.textContent = score;
+            gameOverScreen.style.display = 'block';
+        }
+
+        function draw() {
+            ctx.fillStyle = '#000';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            if (gameState === GAME_STATE.PLAYING) {
+                updatePlayer();
+                updateEnemies();
+                checkCollisions();
+            }
+
+            drawPlayer();
+            enemies.forEach(enemy => drawEnemy(enemy));
+            drawBullets();
+
+            if (gameState === GAME_STATE.IDLE) {
+                ctx.fillStyle = 'rgba(0, 255, 0, 0.7)';
+                ctx.font = '48px Arial';
+                ctx.textAlign = 'center';
+                ctx.fillText('SPACE INVADERS', canvas.width / 2, canvas.height / 2 - 50);
+                ctx.font = '24px Arial';
+                ctx.fillText('Press SPACE to Start', canvas.width / 2, canvas.height / 2 + 50);
+            }
+
+            requestAnimationFrame(draw);
+        }
+
+        // Start the game loop
+        draw();
+    </script>
+</body>
+</html>
