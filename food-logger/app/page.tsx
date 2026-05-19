@@ -1,4 +1,4 @@
-import { serverClient } from '@/lib/supabase';
+import { serverClient } from '@/lib/supabase-server';
 import { dailyTarget } from '@/lib/nutrition';
 import TrendChart from '@/components/TrendChart';
 import Link from 'next/link';

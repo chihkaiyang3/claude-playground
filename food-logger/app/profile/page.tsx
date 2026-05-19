@@ -1,6 +1,6 @@
 'use client';
 import { useEffect, useState } from 'react';
-import { browserClient } from '@/lib/supabase';
+import { browserClient } from '@/lib/supabase-browser';
 import { dailyTarget } from '@/lib/nutrition';
 
 type Activity = 'sedentary' | 'light' | 'moderate' | 'active' | 'very_active';

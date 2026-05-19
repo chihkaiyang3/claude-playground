@@ -1,6 +1,6 @@
 'use client';
 import { useState } from 'react';
-import { browserClient } from '@/lib/supabase';
+import { browserClient } from '@/lib/supabase-browser';
 
 type Analysis = {
   items: { name: string; portion: string; kcal: number; protein_g: number; carbs_g: number; fat_g: number }[];

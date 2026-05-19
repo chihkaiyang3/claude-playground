@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { anthropic, MODEL } from '@/lib/anthropic';
-import { serverClient } from '@/lib/supabase';
+import { serverClient } from '@/lib/supabase-server';
 import { dailyTarget } from '@/lib/nutrition';
 
 export const runtime = 'nodejs';
