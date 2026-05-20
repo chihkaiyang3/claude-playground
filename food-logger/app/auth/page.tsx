@@ -13,7 +13,7 @@ export default function AuthPage() {
     setError(null); setSent(false); setLoading(true);
     try {
       const sb = browserClient();
-      const { error } = await sb.auth.signInWithOtp({ email, options: { emailRedirectTo: window.location.origin } });
+      const { error } = await sb.auth.signInWithOtp({ email, options: { emailRedirectTo: `${window.location.origin}/auth/callback` } });
       if (error) setError(error.message); else setSent(true);
     } catch (e: any) {
       setError(e?.message || 'Network error. Try again.');
