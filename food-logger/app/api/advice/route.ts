@@ -20,7 +20,7 @@ export async function POST() {
 
   const { data: profile } = await sb.from('profiles').select('*').eq('user_id', user.id).single();
   const since = new Date(Date.now() - 14 * 86400_000).toISOString();
-  const { data: entries } = await sb.from('food_entries').select('taken_at, items, kcal, protein_g, carbs_g, fat_g').eq('user_id', user.id).gte('taken_at', since).order('taken_at', { ascending: false });
+  const { data: entries } = await sb.from('food_entries').select('taken_at, meal, items, kcal, protein_g, carbs_g, fat_g').eq('user_id', user.id).gte('taken_at', since).order('taken_at', { ascending: false });
 
   if (!profile) return NextResponse.json({ error: 'complete your profile first' }, { status: 400 });
 

@@ -1,9 +1,25 @@
 import { serverClient } from '@/lib/supabase-server';
 import { dailyTarget } from '@/lib/nutrition';
 import TrendChart from '@/components/TrendChart';
+import WeightCard from '@/components/WeightCard';
+import { MEALS, type Meal } from '@/lib/meals';
 import Link from 'next/link';
 
 export const dynamic = 'force-dynamic';
+
+function computeStreak(entries: { taken_at: string }[]): number {
+  if (!entries.length) return 0;
+  const days = new Set(entries.map(e => new Date(e.taken_at).toISOString().slice(0, 10)));
+  const today = new Date(); today.setHours(0, 0, 0, 0);
+  let streak = 0;
+  for (let i = 0; i < 365; i++) {
+    const d = new Date(today.getTime() - i * 86400_000).toISOString().slice(0, 10);
+    if (days.has(d)) streak++;
+    else if (i === 0) continue;
+    else break;
+  }
+  return streak;
+}
 
 export default async function Dashboard() {
   const sb = serverClient();
@@ -24,28 +40,49 @@ export default async function Dashboard() {
   const startOf = (d: Date) => { const x = new Date(d); x.setHours(0, 0, 0, 0); return x; };
   const today = startOf(new Date());
   const weekAgo = new Date(today.getTime() - 6 * 86400_000);
+  const monthAgo = new Date(today.getTime() - 29 * 86400_000);
 
-  const { data: weekEntries } = await sb.from('food_entries').select('taken_at, kcal, protein_g, carbs_g, fat_g, items, image_path').eq('user_id', user.id).gte('taken_at', weekAgo.toISOString()).order('taken_at', { ascending: false });
+  const [weekRes, streakRes, weightsRes] = await Promise.all([
+    sb.from('food_entries').select('id, taken_at, kcal, protein_g, carbs_g, fat_g, items, meal').eq('user_id', user.id).gte('taken_at', weekAgo.toISOString()).order('taken_at', { ascending: false }),
+    sb.from('food_entries').select('taken_at').eq('user_id', user.id).gte('taken_at', new Date(today.getTime() - 60 * 86400_000).toISOString()),
+    sb.from('weight_logs').select('logged_at, weight_kg').eq('user_id', user.id).gte('logged_at', monthAgo.toISOString()).order('logged_at', { ascending: false })
+  ]);
+  const weekEntries = weekRes.data || [];
+  const weights = weightsRes.data || [];
 
-  const todayEntries = (weekEntries || []).filter(e => new Date(e.taken_at) >= today);
-  const sum = todayEntries.reduce((a, e) => ({ kcal: a.kcal + (e.kcal || 0), p: a.p + Number(e.protein_g || 0), c: a.c + Number(e.carbs_g || 0), f: a.f + Number(e.fat_g || 0) }), { kcal: 0, p: 0, c: 0, f: 0 });
+  const streak = computeStreak(streakRes.data || []);
+
+  const todayEntries = weekEntries.filter((e: any) => new Date(e.taken_at) >= today);
+  const sum = todayEntries.reduce((a: any, e: any) => ({ kcal: a.kcal + (e.kcal || 0), p: a.p + Number(e.protein_g || 0), c: a.c + Number(e.carbs_g || 0), f: a.f + Number(e.fat_g || 0) }), { kcal: 0, p: 0, c: 0, f: 0 });
+
+  const byMeal: Record<Meal, any[]> = { breakfast: [], lunch: [], dinner: [], snack: [] };
+  todayEntries.forEach((e: any) => { const m = (e.meal || 'snack') as Meal; byMeal[m].push(e); });
 
   const byDay = new Map<string, number>();
   for (let i = 6; i >= 0; i--) {
     const d = new Date(today.getTime() - i * 86400_000);
     byDay.set(d.toISOString().slice(5, 10), 0);
   }
-  (weekEntries || []).forEach(e => {
+  weekEntries.forEach((e: any) => {
     const key = new Date(e.taken_at).toISOString().slice(5, 10);
     if (byDay.has(key)) byDay.set(key, byDay.get(key)! + (e.kcal || 0));
   });
   const trend = Array.from(byDay, ([day, kcal]) => ({ day, kcal }));
 
+  const latestWeight = weights[0] ? Number(weights[0].weight_kg) : (profile?.current_weight_kg ?? null);
+
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold">Today</h1>
-        <p className="text-neutral-400 text-sm">{target ? `Target: ${target} kcal` : <Link href="/profile" className="underline">Set up your profile</Link>}</p>
+    <div className="space-y-5">
+      <div className="flex justify-between items-end">
+        <div>
+          <h1 className="text-2xl font-bold">Today</h1>
+          <p className="text-neutral-400 text-sm">{target ? `Target: ${target} kcal` : <Link href="/profile" className="underline">Set up your profile</Link>}</p>
+        </div>
+        {streak > 0 && (
+          <div className="bg-orange-900/40 border border-orange-700 rounded-xl px-3 py-1 text-sm font-semibold">
+            🔥 {streak}-day streak
+          </div>
+        )}
       </div>
 
       <div className="bg-neutral-900 rounded-2xl p-4">
@@ -61,22 +98,43 @@ export default async function Dashboard() {
       </div>
 
       <div>
+        <h2 className="text-lg font-semibold mb-2">Today by meal</h2>
+        <div className="space-y-2">
+          {MEALS.map(m => {
+            const list = byMeal[m.id];
+            const mealKcal = list.reduce((a, e: any) => a + (e.kcal || 0), 0);
+            return (
+              <div key={m.id} className="bg-neutral-900 rounded-xl p-3">
+                <div className="flex justify-between text-sm">
+                  <span>{m.emoji} {m.label}</span>
+                  <span className="text-emerald-400 font-semibold">{mealKcal} kcal</span>
+                </div>
+                {list.length > 0 && (
+                  <ul className="mt-2 space-y-1">
+                    {list.map((e: any) => (
+                      <li key={e.id}>
+                        <Link href={`/entry/${e.id}`} className="flex justify-between text-xs text-neutral-300">
+                          <span className="truncate pr-2">
+                            {(e.items && e.items[0]?.name) || 'Meal'}{e.items && e.items.length > 1 ? ` +${e.items.length - 1}` : ''}
+                          </span>
+                          <span>{e.kcal} kcal</span>
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      <div>
         <h2 className="text-lg font-semibold mb-2">7-day trend</h2>
         <TrendChart data={trend} target={target} />
       </div>
 
-      <div>
-        <h2 className="text-lg font-semibold mb-2">Recent meals</h2>
-        <ul className="space-y-2">
-          {(weekEntries || []).slice(0, 10).map((e: any) => (
-            <li key={e.taken_at} className="bg-neutral-900 rounded-xl p-3 flex justify-between text-sm">
-              <span>{new Date(e.taken_at).toLocaleString()}</span>
-              <span className="text-emerald-400 font-semibold">{e.kcal} kcal</span>
-            </li>
-          ))}
-          {!weekEntries?.length && <li className="text-neutral-500 text-sm">No meals yet. Tap Log to add one.</li>}
-        </ul>
-      </div>
+      <WeightCard current={latestWeight} goal={profile?.goal_weight_kg ?? null} logs={weights as any} />
     </div>
   );
 }
