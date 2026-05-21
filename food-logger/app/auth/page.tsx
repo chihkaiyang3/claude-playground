@@ -12,8 +12,16 @@ export default function AuthPage() {
     if (!email) { setError('Enter your email first.'); return; }
     setError(null); setSent(false); setLoading(true);
     try {
+      const check = await fetch('/api/auth/check-allowed', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: email.trim() })
+      }).then(r => r.json());
+      if (!check.allowed) {
+        setError('This app is private. Ask Kai to add your email.');
+        return;
+      }
       const sb = browserClient();
-      const { error } = await sb.auth.signInWithOtp({ email, options: { emailRedirectTo: `${window.location.origin}/auth/callback` } });
+      const { error } = await sb.auth.signInWithOtp({ email: email.trim(), options: { emailRedirectTo: `${window.location.origin}/auth/callback` } });
       if (error) setError(error.message); else setSent(true);
     } catch (e: any) {
       setError(e?.message || 'Network error. Try again.');
