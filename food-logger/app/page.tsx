@@ -27,9 +27,10 @@ export default async function Dashboard() {
   if (!user) {
     return (
       <div className="space-y-4">
+        <img src="/hero.jpg" alt="" className="w-full h-40 object-cover rounded-2xl" />
         <h1 className="text-2xl font-bold">Food Logger</h1>
-        <p className="text-neutral-400">Sign in to start tracking.</p>
-        <Link href="/auth" className="inline-block bg-emerald-600 rounded-xl px-4 py-3 font-semibold">Sign in</Link>
+        <p className="text-neutral-500">Sign in to start tracking.</p>
+        <Link href="/auth" className="inline-block bg-emerald-600 text-white rounded-xl px-4 py-3 font-semibold">Sign in</Link>
       </div>
     );
   }
@@ -73,27 +74,28 @@ export default async function Dashboard() {
 
   return (
     <div className="space-y-5">
+      <img src="/hero.jpg" alt="" className="w-full h-32 object-cover rounded-2xl" />
       <div className="flex justify-between items-end">
         <div>
           <h1 className="text-2xl font-bold">Today</h1>
-          <p className="text-neutral-400 text-sm">{target ? `Target: ${target} kcal` : <Link href="/profile" className="underline">Set up your profile</Link>}</p>
+          <p className="text-neutral-500 text-sm">{target ? `Target: ${target} kcal` : <Link href="/profile" className="underline">Set up your profile</Link>}</p>
         </div>
         {streak > 0 && (
-          <div className="bg-orange-900/40 border border-orange-700 rounded-xl px-3 py-1 text-sm font-semibold">
+          <div className="bg-orange-100 border border-orange-200 text-orange-800 rounded-xl px-3 py-1 text-sm font-semibold">
             🔥 {streak}-day streak
           </div>
         )}
       </div>
 
-      <div className="bg-neutral-900 rounded-2xl p-4">
+      <div className="bg-white border border-neutral-200 rounded-2xl p-4">
         <div className="flex items-baseline justify-between">
-          <span className="text-4xl font-bold text-emerald-400">{sum.kcal}</span>
-          <span className="text-neutral-400">/ {target ?? '—'} kcal</span>
+          <span className="text-4xl font-bold text-emerald-600">{sum.kcal}</span>
+          <span className="text-neutral-500">/ {target ?? '—'} kcal</span>
         </div>
         <div className="grid grid-cols-3 gap-2 mt-3 text-sm text-center">
-          <div className="bg-neutral-800 rounded p-2">Protein<br /><b>{Math.round(sum.p)}g</b></div>
-          <div className="bg-neutral-800 rounded p-2">Carbs<br /><b>{Math.round(sum.c)}g</b></div>
-          <div className="bg-neutral-800 rounded p-2">Fat<br /><b>{Math.round(sum.f)}g</b></div>
+          <div className="bg-neutral-100 rounded p-2">Protein<br /><b>{Math.round(sum.p)}g</b></div>
+          <div className="bg-neutral-100 rounded p-2">Carbs<br /><b>{Math.round(sum.c)}g</b></div>
+          <div className="bg-neutral-100 rounded p-2">Fat<br /><b>{Math.round(sum.f)}g</b></div>
         </div>
       </div>
 
@@ -104,16 +106,16 @@ export default async function Dashboard() {
             const list = byMeal[m.id];
             const mealKcal = list.reduce((a, e: any) => a + (e.kcal || 0), 0);
             return (
-              <div key={m.id} className="bg-neutral-900 rounded-xl p-3">
+              <div key={m.id} className="bg-white border border-neutral-200 rounded-xl p-3">
                 <div className="flex justify-between text-sm">
                   <span>{m.emoji} {m.label}</span>
-                  <span className="text-emerald-400 font-semibold">{mealKcal} kcal</span>
+                  <span className="text-emerald-600 font-semibold">{mealKcal} kcal</span>
                 </div>
                 {list.length > 0 && (
                   <ul className="mt-2 space-y-1">
                     {list.map((e: any) => (
                       <li key={e.id}>
-                        <Link href={`/entry/${e.id}`} className="flex justify-between text-xs text-neutral-300">
+                        <Link href={`/entry/${e.id}`} className="flex justify-between text-xs text-neutral-700">
                           <span className="truncate pr-2">
                             {(e.items && e.items[0]?.name) || 'Meal'}{e.items && e.items.length > 1 ? ` +${e.items.length - 1}` : ''}
                           </span>

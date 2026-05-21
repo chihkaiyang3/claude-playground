@@ -9,7 +9,7 @@ export default function MealSelect({ value, onChange }: { value: Meal; onChange:
           key={m.id}
           type="button"
           onClick={() => onChange(m.id)}
-          className={`rounded-xl py-2 text-sm flex flex-col items-center ${value === m.id ? 'bg-emerald-600 text-white' : 'bg-neutral-800 text-neutral-300'}`}
+          className={`rounded-xl py-2 text-sm flex flex-col items-center ${value === m.id ? 'bg-emerald-600 text-white' : 'bg-neutral-100 text-neutral-700'}`}
         >
           <span className="text-xl">{m.emoji}</span>
           <span className="text-[11px]">{m.label}</span>

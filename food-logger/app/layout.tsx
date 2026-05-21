@@ -8,7 +8,7 @@ export const metadata: Metadata = {
   appleWebApp: { capable: true, statusBarStyle: 'black-translucent', title: 'Food Logger' },
   icons: { icon: '/icon.png', apple: '/icon.png' }
 };
-export const viewport: Viewport = { width: 'device-width', initialScale: 1, viewportFit: 'cover', themeColor: '#0a0a0a' };
+export const viewport: Viewport = { width: 'device-width', initialScale: 1, viewportFit: 'cover', themeColor: '#f8fafc' };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (

@@ -64,39 +64,39 @@ export default function EntryEditor({ entry }: { entry: Entry }) {
 
   return (
     <div className="space-y-4">
-      <div className="bg-neutral-900 rounded-2xl p-4 space-y-3">
+      <div className="bg-white border border-neutral-200 rounded-2xl p-4 space-y-3">
         <div className="flex justify-between items-baseline">
           <h3 className="font-semibold">Items</h3>
-          <span className="text-emerald-400 font-bold">{Math.round(totals.kcal)} kcal</span>
+          <span className="text-emerald-600 font-bold">{Math.round(totals.kcal)} kcal</span>
         </div>
         <MealSelect value={meal} onChange={setMeal} />
         <div className="space-y-2">
           {items.map((it, i) => (
-            <div key={i} className="bg-neutral-800 rounded-lg p-2 space-y-1 text-sm">
+            <div key={i} className="bg-neutral-100 rounded-lg p-2 space-y-1 text-sm">
               <div className="flex gap-2">
-                <input value={it.name} onChange={e => updateItem(i, { name: e.target.value })} placeholder="name" className="flex-1 bg-neutral-900 rounded px-2 py-1" />
-                <input value={it.portion} onChange={e => updateItem(i, { portion: e.target.value })} placeholder="portion" className="w-24 bg-neutral-900 rounded px-2 py-1" />
-                <button onClick={() => removeItem(i)} className="text-red-400 px-2">✕</button>
+                <input value={it.name} onChange={e => updateItem(i, { name: e.target.value })} placeholder="name" className="flex-1 bg-white border border-neutral-200 rounded px-2 py-1" />
+                <input value={it.portion} onChange={e => updateItem(i, { portion: e.target.value })} placeholder="portion" className="w-24 bg-white border border-neutral-200 rounded px-2 py-1" />
+                <button onClick={() => removeItem(i)} className="text-red-600 px-2">✕</button>
               </div>
               <div className="grid grid-cols-4 gap-1 text-xs">
-                <label className="flex flex-col"><span className="text-neutral-500">kcal</span><input type="number" value={it.kcal} onChange={e => updateItem(i, { kcal: +e.target.value })} className="bg-neutral-900 rounded px-1 py-1" /></label>
-                <label className="flex flex-col"><span className="text-neutral-500">P</span><input type="number" step="0.1" value={it.protein_g} onChange={e => updateItem(i, { protein_g: +e.target.value })} className="bg-neutral-900 rounded px-1 py-1" /></label>
-                <label className="flex flex-col"><span className="text-neutral-500">C</span><input type="number" step="0.1" value={it.carbs_g} onChange={e => updateItem(i, { carbs_g: +e.target.value })} className="bg-neutral-900 rounded px-1 py-1" /></label>
-                <label className="flex flex-col"><span className="text-neutral-500">F</span><input type="number" step="0.1" value={it.fat_g} onChange={e => updateItem(i, { fat_g: +e.target.value })} className="bg-neutral-900 rounded px-1 py-1" /></label>
+                <label className="flex flex-col"><span className="text-neutral-500">kcal</span><input type="number" value={it.kcal} onChange={e => updateItem(i, { kcal: +e.target.value })} className="bg-white border border-neutral-200 rounded px-1 py-1" /></label>
+                <label className="flex flex-col"><span className="text-neutral-500">P</span><input type="number" step="0.1" value={it.protein_g} onChange={e => updateItem(i, { protein_g: +e.target.value })} className="bg-white border border-neutral-200 rounded px-1 py-1" /></label>
+                <label className="flex flex-col"><span className="text-neutral-500">C</span><input type="number" step="0.1" value={it.carbs_g} onChange={e => updateItem(i, { carbs_g: +e.target.value })} className="bg-white border border-neutral-200 rounded px-1 py-1" /></label>
+                <label className="flex flex-col"><span className="text-neutral-500">F</span><input type="number" step="0.1" value={it.fat_g} onChange={e => updateItem(i, { fat_g: +e.target.value })} className="bg-white border border-neutral-200 rounded px-1 py-1" /></label>
               </div>
             </div>
           ))}
-          <button onClick={addItem} className="w-full bg-neutral-800 rounded-lg py-2 text-sm text-neutral-300">+ Add item</button>
+          <button onClick={addItem} className="w-full bg-neutral-100 rounded-lg py-2 text-sm text-neutral-700">+ Add item</button>
         </div>
-        <input value={notes} onChange={e => setNotes(e.target.value)} placeholder="Notes (optional)" className="w-full bg-neutral-800 rounded p-2 text-sm" />
+        <input value={notes} onChange={e => setNotes(e.target.value)} placeholder="Notes (optional)" className="w-full bg-neutral-100 rounded p-2 text-sm" />
         <div className="grid grid-cols-3 gap-2 text-sm text-center">
-          <div className="bg-neutral-800 rounded p-2">P {Math.round(totals.protein_g)}g</div>
-          <div className="bg-neutral-800 rounded p-2">C {Math.round(totals.carbs_g)}g</div>
-          <div className="bg-neutral-800 rounded p-2">F {Math.round(totals.fat_g)}g</div>
+          <div className="bg-neutral-100 rounded p-2">P {Math.round(totals.protein_g)}g</div>
+          <div className="bg-neutral-100 rounded p-2">C {Math.round(totals.carbs_g)}g</div>
+          <div className="bg-neutral-100 rounded p-2">F {Math.round(totals.fat_g)}g</div>
         </div>
-        {error && <p className="text-red-400 text-sm">{error}</p>}
-        <button onClick={save} disabled={busy} className="w-full bg-emerald-600 disabled:opacity-50 rounded-xl py-3 font-semibold">Save changes</button>
-        <button onClick={remove} disabled={busy} className="w-full bg-red-900 disabled:opacity-50 rounded-xl py-3 font-semibold">Delete entry</button>
+        {error && <p className="text-red-600 text-sm">{error}</p>}
+        <button onClick={save} disabled={busy} className="w-full bg-emerald-600 text-white disabled:opacity-50 rounded-xl py-3 font-semibold">Save changes</button>
+        <button onClick={remove} disabled={busy} className="w-full bg-red-100 text-red-700 border border-red-200 disabled:opacity-50 rounded-xl py-3 font-semibold">Delete entry</button>
       </div>
     </div>
   );

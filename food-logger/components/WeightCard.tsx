@@ -32,11 +32,11 @@ export default function WeightCard({
   const latest = data.length ? data[data.length - 1].kg : current;
 
   return (
-    <div className="bg-neutral-900 rounded-2xl p-4 space-y-3">
+    <div className="bg-white border border-neutral-200 rounded-2xl p-4 space-y-3">
       <div className="flex justify-between items-baseline">
         <h2 className="font-semibold">Weight</h2>
         {latest && goal ? (
-          <span className="text-sm text-neutral-400">{latest.toFixed(1)} → {goal} kg</span>
+          <span className="text-sm text-neutral-500">{latest.toFixed(1)} → {goal} kg</span>
         ) : null}
       </div>
       {data.length > 1 && (
@@ -58,11 +58,11 @@ export default function WeightCard({
           value={value || ''}
           onChange={e => setValue(+e.target.value)}
           placeholder="kg"
-          className="flex-1 bg-neutral-800 rounded p-2"
+          className="flex-1 bg-neutral-100 rounded p-2"
         />
-        <button onClick={log} disabled={busy} className="bg-emerald-600 disabled:opacity-50 rounded-xl px-4 font-semibold">Log</button>
+        <button onClick={log} disabled={busy} className="bg-emerald-600 text-white disabled:opacity-50 rounded-xl px-4 font-semibold">Log</button>
       </div>
-      {error && <p className="text-red-400 text-sm">{error}</p>}
+      {error && <p className="text-red-600 text-sm">{error}</p>}
     </div>
   );
 }

@@ -32,12 +32,13 @@ export default function AuthPage() {
 
   return (
     <div className="space-y-4">
+      <img src="/auth-hero.jpg" alt="" className="w-full h-40 object-cover rounded-2xl" />
       <h1 className="text-2xl font-bold">Sign in</h1>
-      <p className="text-neutral-400 text-sm">We'll email you a magic link.</p>
-      <input type="email" placeholder="you@example.com" className="w-full bg-neutral-900 rounded p-3" value={email} onChange={e => setEmail(e.target.value)} />
-      <button onClick={send} disabled={loading} className="w-full bg-emerald-600 disabled:opacity-50 rounded-xl py-3 font-semibold">{loading ? 'Sending…' : 'Send link'}</button>
-      {sent && <p className="text-emerald-400">Check your email.</p>}
-      {error && <p className="text-red-400 text-sm">{error}</p>}
+      <p className="text-neutral-500 text-sm">We'll email you a magic link.</p>
+      <input type="email" placeholder="you@example.com" className="w-full bg-white border border-neutral-200 rounded p-3" value={email} onChange={e => setEmail(e.target.value)} />
+      <button onClick={send} disabled={loading} className="w-full bg-emerald-600 text-white disabled:opacity-50 rounded-xl py-3 font-semibold">{loading ? 'Sending…' : 'Send link'}</button>
+      {sent && <p className="text-emerald-600">Check your email.</p>}
+      {error && <p className="text-red-600 text-sm">{error}</p>}
     </div>
   );
 }

@@ -22,14 +22,14 @@ export default function AdvicePage() {
   return (
     <div className="space-y-4">
       <h1 className="text-2xl font-bold">Personalised advice</h1>
-      <p className="text-neutral-400 text-sm">Claude reviews your profile and last 14 days of meals to suggest sustainable changes.</p>
-      <button onClick={getAdvice} disabled={loading} className="w-full bg-emerald-600 disabled:opacity-50 rounded-xl py-4 font-semibold">
+      <p className="text-neutral-500 text-sm">Claude reviews your profile and last 14 days of meals to suggest sustainable changes.</p>
+      <button onClick={getAdvice} disabled={loading} className="w-full bg-emerald-600 text-white disabled:opacity-50 rounded-xl py-4 font-semibold">
         {loading ? 'Thinking…' : 'Get advice'}
       </button>
-      {error && <p className="text-red-400 text-sm">{error}</p>}
-      {target && <p className="text-neutral-400 text-sm">Daily target: <b>{target} kcal</b></p>}
+      {error && <p className="text-red-600 text-sm">{error}</p>}
+      {target && <p className="text-neutral-500 text-sm">Daily target: <b>{target} kcal</b></p>}
       {advice && (
-        <article className="prose prose-invert prose-sm max-w-none bg-neutral-900 rounded-2xl p-4">
+        <article className="prose prose-sm max-w-none bg-white border border-neutral-200 rounded-2xl p-4">
           <ReactMarkdown>{advice}</ReactMarkdown>
         </article>
       )}

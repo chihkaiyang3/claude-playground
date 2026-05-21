@@ -15,7 +15,7 @@ export default async function EntryEditPage({ params }: { params: { id: string }
   return (
     <div className="space-y-4">
       <h1 className="text-2xl font-bold">Edit entry</h1>
-      <p className="text-neutral-400 text-sm">{new Date(entry.taken_at).toLocaleString()}</p>
+      <p className="text-neutral-500 text-sm">{new Date(entry.taken_at).toLocaleString()}</p>
       <EntryEditor entry={entry as any} />
     </div>
   );
