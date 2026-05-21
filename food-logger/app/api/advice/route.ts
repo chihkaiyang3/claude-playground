@@ -33,7 +33,7 @@ export async function POST() {
   const msg = await anthropic.messages.create({
     model: MODEL,
     max_tokens: 800,
-    system: [{ type: 'text', text: SYSTEM, cache_control: { type: 'ephemeral' } }],
+    system: [{ type: 'text', text: SYSTEM, cache_control: { type: 'ephemeral' } }] as any,
     messages: [{ role: 'user', content: `Here is my data:\n\`\`\`json\n${JSON.stringify(summary, null, 2)}\n\`\`\`\nGive me personalised advice to lose weight sustainably.` }]
   });
 

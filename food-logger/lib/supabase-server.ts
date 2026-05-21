@@ -9,9 +9,9 @@ export function serverClient() {
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
       cookies: {
-        get: (n) => store.get(n)?.value,
-        set: (n, v, o: CookieOptions) => { try { store.set({ name: n, value: v, ...o }); } catch {} },
-        remove: (n, o: CookieOptions) => { try { store.set({ name: n, value: '', ...o }); } catch {} }
+        get: (n: string) => store.get(n)?.value,
+        set: (n: string, v: string, o: CookieOptions) => { try { store.set({ name: n, value: v, ...o }); } catch {} },
+        remove: (n: string, o: CookieOptions) => { try { store.set({ name: n, value: '', ...o }); } catch {} }
       }
     }
   );
