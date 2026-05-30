@@ -2,6 +2,7 @@ import { serverClient } from '@/lib/supabase-server';
 import { dailyTarget } from '@/lib/nutrition';
 import TrendChart from '@/components/TrendChart';
 import WeightCard from '@/components/WeightCard';
+import ExerciseCard from '@/components/ExerciseCard';
 import { MEALS, type Meal } from '@/lib/meals';
 import Link from 'next/link';
 
@@ -43,13 +44,16 @@ export default async function Dashboard() {
   const weekAgo = new Date(today.getTime() - 6 * 86400_000);
   const monthAgo = new Date(today.getTime() - 29 * 86400_000);
 
-  const [weekRes, streakRes, weightsRes] = await Promise.all([
+  const [weekRes, streakRes, weightsRes, exerciseRes] = await Promise.all([
     sb.from('food_entries').select('id, taken_at, kcal, protein_g, carbs_g, fat_g, items, meal').eq('user_id', user.id).gte('taken_at', weekAgo.toISOString()).order('taken_at', { ascending: false }),
     sb.from('food_entries').select('taken_at').eq('user_id', user.id).gte('taken_at', new Date(today.getTime() - 60 * 86400_000).toISOString()),
-    sb.from('weight_logs').select('logged_at, weight_kg').eq('user_id', user.id).gte('logged_at', monthAgo.toISOString()).order('logged_at', { ascending: false })
+    sb.from('weight_logs').select('logged_at, weight_kg').eq('user_id', user.id).gte('logged_at', monthAgo.toISOString()).order('logged_at', { ascending: false }),
+    sb.from('exercise_logs').select('id, activity, duration_min, kcal').eq('user_id', user.id).gte('performed_at', today.toISOString()).order('performed_at', { ascending: false })
   ]);
   const weekEntries = weekRes.data || [];
   const weights = weightsRes.data || [];
+  const todayExercise = exerciseRes.data || [];
+  const burned = todayExercise.reduce((a: number, e: any) => a + (e.kcal || 0), 0);
 
   const streak = computeStreak(streakRes.data || []);
 
@@ -89,9 +93,12 @@ export default async function Dashboard() {
 
       <div className="bg-white border border-neutral-200 rounded-2xl p-4">
         <div className="flex items-baseline justify-between">
-          <span className="text-4xl font-bold text-emerald-600">{sum.kcal}</span>
+          <span className="text-4xl font-bold text-emerald-600">{sum.kcal - burned}</span>
           <span className="text-neutral-500">/ {target ?? '—'} kcal</span>
         </div>
+        {burned > 0 && (
+          <p className="text-xs text-neutral-500 mt-1">{sum.kcal} eaten − <span className="text-orange-600">{burned} burned</span> = net {sum.kcal - burned} kcal</p>
+        )}
         <div className="grid grid-cols-3 gap-2 mt-3 text-sm text-center">
           <div className="bg-neutral-100 rounded p-2">Protein<br /><b>{Math.round(sum.p)}g</b></div>
           <div className="bg-neutral-100 rounded p-2">Carbs<br /><b>{Math.round(sum.c)}g</b></div>
@@ -135,6 +142,8 @@ export default async function Dashboard() {
         <h2 className="text-lg font-semibold mb-2">7-day trend</h2>
         <TrendChart data={trend} target={target} />
       </div>
+
+      <ExerciseCard weightKg={latestWeight} logs={todayExercise as any} />
 
       <WeightCard current={latestWeight} goal={profile?.goal_weight_kg ?? null} logs={weights as any} />
     </div>
