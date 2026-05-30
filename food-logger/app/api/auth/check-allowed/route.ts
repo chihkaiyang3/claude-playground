@@ -15,6 +15,7 @@ export async function POST(req: NextRequest) {
     { cookies: { get: () => undefined, set: () => {}, remove: () => {} } }
   );
   const { data, error } = await sb.rpc('is_email_allowed', { p_email: email.trim() });
-  if (error) return NextResponse.json({ allowed: false, error: error.message }, { status: 500 });
+  // Do not leak internal error details to the client.
+  if (error) return NextResponse.json({ allowed: false }, { status: 500 });
   return NextResponse.json({ allowed: !!data });
 }

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { anthropic, MODEL } from '@/lib/anthropic';
+import { serverClient } from '@/lib/supabase-server';
 
 export const runtime = 'nodejs';
 
@@ -8,8 +9,17 @@ const SYSTEM = `You are a precise nutrition estimator. Given a text description 
 Round numbers to integers. Use standard serving sizes where not specified. If unsure, use conservative middle estimates and set confidence to "low" or "med" accordingly.`;
 
 export async function POST(req: NextRequest) {
+  const sb = serverClient();
+  const { data: { user } } = await sb.auth.getUser();
+  if (!user) return NextResponse.json({ error: 'unauthorized' }, { status: 401 });
+
   const { description } = await req.json();
-  if (!description || !description.trim()) return NextResponse.json({ error: 'missing description' }, { status: 400 });
+  if (!description || typeof description !== 'string' || !description.trim()) {
+    return NextResponse.json({ error: 'missing description' }, { status: 400 });
+  }
+  if (description.length > 2000) {
+    return NextResponse.json({ error: 'description too long' }, { status: 413 });
+  }
 
   const msg = await anthropic.messages.create({
     model: MODEL,
