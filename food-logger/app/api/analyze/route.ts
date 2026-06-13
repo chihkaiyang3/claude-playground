@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { anthropic, MODEL } from '@/lib/anthropic';
+import { anthropic, VISION_MODEL } from '@/lib/anthropic';
 import { serverClient } from '@/lib/supabase-server';
 
 export const runtime = 'nodejs';
@@ -23,7 +23,7 @@ export async function POST(req: NextRequest) {
   }
 
   const msg = await anthropic.messages.create({
-    model: MODEL,
+    model: VISION_MODEL,
     max_tokens: 1024,
     system: [{ type: 'text', text: SYSTEM, cache_control: { type: 'ephemeral' } }] as any,
     messages: [{
