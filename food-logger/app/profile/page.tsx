@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react';
 import { browserClient } from '@/lib/supabase-browser';
 import { dailyTarget } from '@/lib/nutrition';
+import ReminderToggle from '@/components/ReminderToggle';
 
 type Activity = 'sedentary' | 'light' | 'moderate' | 'active' | 'very_active';
 
@@ -55,6 +56,8 @@ export default function ProfilePage() {
       </div>
       <div className="bg-white border border-neutral-200 rounded-xl p-3 text-sm">Daily target: <b className="text-emerald-600">{target} kcal</b></div>
       <button onClick={save} disabled={!userId} className="w-full bg-emerald-600 text-white disabled:opacity-50 rounded-xl py-3 font-semibold">{saved ? 'Saved ✓' : 'Save profile'}</button>
+
+      {userId && <ReminderToggle />}
     </div>
   );
 }
